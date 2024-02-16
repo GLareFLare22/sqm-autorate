@@ -26,19 +26,20 @@
 
 TS=$(date -u -Iminutes) # to avoid identifying location by timezone
 
-if [ -z "$1" ]; then # no parameters, use default repo and branch
-    repo_tar="https://api.github.com/repos/sqm-autorate/sqm-autorate/tarball/main"
+if [ -z "$1" ]; then        # no parameters, use default repo and branch
+    repo_root="https://raw.githubusercontent.com/GLareFLare22/sqm-autorate/develop/main/sqm-autorate-setup.sh"
     INSTALLATION="  [release]"
 
-elif [ -z "$2" ]; then # one parameter, use specified branch in default repo
-    repo_tar="https://api.github.com/repos/sqm-autorate/sqm-autorate/tarball/${1}"
+elif [ -z "$2" ]; then      # one parameter, use specified branch in default repo
+    repo_root="https://raw.githubusercontent.com/GLareFLare22/sqm-autorate/${1}"
     INSTALLATION="\\\\n        branch ${1}\\\\n        ${TS}"
 
-else # two parameters, use specified repo and specified branch
-    repo_tar="https://api.github.com/repos/${1}/sqm-autorate/tarball/${2}"
-    INSTALLATION="\\\\n        ${repo_tar}\\\\n        ${TS}"
+else                        # two parameters, use specified repo and specified branch
+    repo_root="https://raw.githubusercontent.com/${1}/sqm-autorate/${2}"
+    INSTALLATION="\\\\n        ${repo_root}\\\\n        ${TS}"
 
 fi
+
 
 name="sqm-autorate"
 
