@@ -27,7 +27,7 @@
 TS=$(date -u -Iminutes) # to avoid identifying location by timezone
 
 if [ -z "$1" ]; then        # no parameters, use default repo and branch
-    repo_root="https://raw.githubusercontent.com/GLareFLare22/sqm-autorate/develop/main/sqm-autorate-setup.sh"
+    repo_root="https://raw.githubusercontent.com/GLareFLare22/sqm-autorate/develop/main/"
     INSTALLATION="  [release]"
 
 elif [ -z "$2" ]; then      # one parameter, use specified branch in default repo
