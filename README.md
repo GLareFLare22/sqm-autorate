@@ -171,7 +171,7 @@ If you have some kind of DSL connection, read the
 
 3. Run the following command to run the setup script that downloads and installed the required files and packages:
    ```bash
-   sh -c "$(wget -q -O- https://raw.githubusercontent.com/sqm-autorate/sqm-autorate/main/sqm-autorate-setup.sh)"
+   sh -c "$(wget -q -O- https://raw.githubusercontent.com/GLareFLare22/sqm-autorate/develop/main/sqm-autorate-setup.sh)"
    ```
 
 4. If the setup script gives a warning about a configuration file `sqm-autorate-NEW`, use that file to replace `/etc/config/sqm-autorate` (first time installation only)
