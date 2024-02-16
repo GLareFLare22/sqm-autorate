@@ -4,7 +4,7 @@
 #   Copyright (C) 2022
 #       Nils Andreas Svee mailto:contact@lochnair.net (github @Lochnair)
 #       Daniel Lakeland mailto:dlakelan@street-artists.org (github @dlakelan)
-#       Mark Baker mailto:mark@vpost.net (github @Fail-Safe)
+#       Mark Baker mailto:mark@e-bakers.com (github @Fail-Safe)
 #       Charles Corrigan mailto:chas-iot@runegate.org (github @chas-iot)
 #
 #   This Source Code Form is subject to the terms of the Mozilla Public
@@ -24,14 +24,14 @@
 #   authorized under this License except under this disclaimer.
 #
 
-TS=$(date -u -Iminutes) # to avoid identifying location by timezone
+TS=`date -u -Iminutes`      # to avoid identifying location by timezone
 
 if [ -z "$1" ]; then        # no parameters, use default repo and branch
-    repo_root="https://raw.githubusercontent.com/GLareFLare22/sqm-autorate/develop/main/"
+    repo_root="https://raw.githubusercontent.com/sqm-autorate/sqm-autorate/testing/lua-threads"
     INSTALLATION="  [release]"
 
 elif [ -z "$2" ]; then      # one parameter, use specified branch in default repo
-    repo_root="https://raw.githubusercontent.com/GLareFLare22/sqm-autorate/${1}"
+    repo_root="https://raw.githubusercontent.com/sqm-autorate/sqm-autorate/${1}"
     INSTALLATION="\\\\n        branch ${1}\\\\n        ${TS}"
 
 else                        # two parameters, use specified repo and specified branch
@@ -40,15 +40,30 @@ else                        # two parameters, use specified repo and specified b
 
 fi
 
-
 name="sqm-autorate"
 
-autorate_lib_path="/usr/lib/sqm-autorate"
-config_file="sqm-autorate.config"
-configure_file="configure.sh"
-lua_file="sqm-autorate.lua"
 owrt_release_file="/etc/os-release"
+config_file="sqm-autorate.config"
 service_file="sqm-autorate.service"
+lua_file="sqm-autorate.lua"
+get_stats="getstats.sh"
+refl_icmp_file="pinger_icmp.lua"
+refl_udp_file="pinger_udp.lua"
+refl_icmp_ping="reflectors-icmp.csv"
+autorate_lib_path="/usr/lib/sqm-autorate"
+settings_file="settings.lua"
+utilities_file="utility.lua"
+configure_file="configure.sh"
+bit_file="_bit.lua"
+base_file="baseliner.lua"
+histo_gram="delay-histogram.lua"
+log_reads="log_readings.lua"
+ping_file="pinger.lua"
+pretty_file="pretty_speeds.lua"
+rate_file="ratecontroller.lua"
+rate_cont="ratecontroller_ewma.lua"
+ref_sel="reflector_selector.lua"
+ret_file="retrievestats.sh"
 
 # start of pre-installation checks
 cake=$(tc qdisc | grep -i cake)
@@ -75,7 +90,7 @@ if [ "${is_openwrt}" != "OpenWrt" ]; then
     echo "expected 'OpenWrt', found '${is_openwrt}'"
     echo "The installation script should run correctly on many OpenWRT derivatives"
     echo
-    read -r -p ">> Please confirm that you wish to continue installation? (y/n)" go_ahead
+    read -p ">> Please confirm that you wish to continue installation? (y/n)" go_ahead
     go_ahead=$(echo "${go_ahead}" | awk '{ print tolower($0) }')
     if [ "${go_ahead}" != "y" ] && [ "${go_ahead}" != "yes" ]; then
         echo
@@ -84,18 +99,18 @@ if [ "${is_openwrt}" != "OpenWrt" ]; then
     fi
 fi
 
-if [ -x /etc/init.d/sqm-autorate ] && /etc/init.d/sqm-autorate running; then
-    echo ">>> Stopping $name"
+if [ -x /etc/init.d/sqm-autorate ]; then
+    echo ">>> Stopping 'sqm-autorate'"
     /etc/init.d/sqm-autorate stop
 fi
 
 # work out whether to use curl or wget based on available images
 curl=''
 transfer=''
-if [ "$(which curl | wc -l)" != "0" ]; then
+if [ $(which curl | wc -l) != "0" ]; then
     transfer='curl -s -o'
 
-elif [ "$(which wget | wc -l)" != "0" ]; then
+elif [ $(which wget | wc -l) != "0" ]; then
     transfer='wget -q -O'
 
 else
@@ -127,31 +142,62 @@ luarocks install vstruct
 
 [ -d "./.git" ] && is_git_proj=true || is_git_proj=false
 
-echo ">>> Creating ${autorate_lib_path}"
+echo ">>> creating ${autorate_lib_path}"
 mkdir -p "${autorate_lib_path}"
 
 if [ "$is_git_proj" = false ]; then
-    # Need to transfer some stuff down...
+    # Need to wget some stuff down...
     echo ">>> Downloading sqm-autorate files..."
-    (
-        cd "${autorate_lib_path}" || {
-            echo "ERROR: could not find ${autorate_lib_path}"
-            exit 1
-        }
-        $transfer "$repo_tar" "/tmp/sqm-autorate-install.tar.gz"
-        tar -xzf "/tmp/sqm-autorate-install.tar.gz" -C /tmp
-    )
+    cd "${autorate_lib_path}"
+    $transfer "$config_file" "$repo_root/config/$config_file"
+    $transfer "$service_file" "$repo_root/service/$service_file"
+    $transfer "$lua_file" "$repo_root/lib/$lua_file"
+    $transfer "$settings_file" "$repo_root/lib/$settings_file"
+    $transfer "$utilities_file" "$repo_root/lib/$utilities_file"
+    $transfer "$get_stats" "$repo_root/lib/$get_stats"
+    $transfer "$refl_icmp_file" "$repo_root/lib/$refl_icmp_file"
+    $transfer "$refl_udp_file" "$repo_root/lib/$refl_udp_file"
+    $transfer "$configure_file" "$repo_root/lib/$configure_file"
+    $transfer "$bit_file" "$repo_root/lib/$bit_file"
+    $transfer "$base_file" "$repo_root/lib/$base_file"
+    $transfer "$histo_gram" "$repo_root/lib/$histo_gram"
+    $transfer "$log_reads" "$repo_root/lib/$log_reads"
+    $transfer "$ping_file" "$repo_root/lib/$ping_file"
+    $transfer "$pretty_file" "$repo_root/lib/$pretty_file"
+    $transfer "$rate_file" "$repo_root/lib/$rate_file"
+    $transfer "$rate_cont" "$repo_root/lib/$rate_cont"
+    $transfer "$ref_sel" "$repo_root/lib/$ref_sel"
+    $transfer "$ret_file" "$repo_root/lib/$ret_file"
+    $transfer "$refl_icmp_ping" "$repo_root/lib/$refl_icmp_ping"
+    
+    cd - >/dev/null
 fi
 
-echo ">>> Putting lib files into place..."
 if [ "$is_git_proj" = true ]; then
-    cp -r ./lib/. "${autorate_lib_path}"
-else
-    cp -r /tmp/sqm-autorate-sqm-autorate-*/lib/. "${autorate_lib_path}"
+    echo ">>> Copying sqm-autorate lib files into place..."
+    cp "./lib/$lua_file" "$autorate_lib_path/$lua_file"
+    cp "./lib/$settings_file" "$autorate_lib_path/$settings_file"
+    cp "./lib/$utilities_file" "$autorate_lib_path/$utilities_file"
+    cp "./lib/$get_stats" "$autorate_lib_path/$get_stats"
+    cp "./lib/$refl_icmp_file" "$autorate_lib_path/$refl_icmp_file"
+    cp "./lib/$refl_udp_file" "$autorate_lib_path/$refl_udp_file"
+    cp "./lib/$configure_file" "$autorate_lib_path/$configure_file"
+    
+    cp "./lib/$refl_icmp_ping" "$autorate_lib_path/$refl_icmp_ping"
+    cp "./lib/$bit_file" "$autorate_lib_path/$bit_file"
+    cp "./lib/$base_file" "$autorate_lib_path/$base_file"
+    cp "./lib/$histo_gram" "$autorate_lib_path/$histo_gram"
+    cp "./lib/$log_reads" "$autorate_lib_path/$log_reads"
+    cp "./lib/$ping_file" "$autorate_lib_path/$ping_file"
+    cp "./lib/$pretty_file" "$autorate_lib_path/$pretty_file"
+    cp "./lib/$rate_file" "$autorate_lib_path/$rate_file"
+    cp "./lib/$rate_cont" "$autorate_lib_path/$rate_cont"
+    cp "./lib/$ref_sel" "$autorate_lib_path/$ref_sel"
+    cp "./lib/$ret_file" "$autorate_lib_path/$ret_file"
 fi
 
-echo ">>> Making lua and shell files executable..."
-find "${autorate_lib_path}" -type f -regex ".*\.\(lua\|sh\)" | xargs chmod +x
+echo ">>> Making $lua_file, $get_stats, and $configure_file executable..."
+chmod +x "$autorate_lib_path/$lua_file" "$autorate_lib_path/$get_stats" "$autorate_lib_path/$configure_file"
 
 echo ">>> Putting config file into place..."
 if [ -f "/etc/config/sqm-autorate" ]; then
@@ -159,13 +205,13 @@ if [ -f "/etc/config/sqm-autorate" ]; then
     if [ "$is_git_proj" = true ]; then
         cp "./config/$config_file" "/etc/config/$name-NEW"
     else
-        cp "/tmp/sqm-autorate-sqm-autorate-*/config/$config_file" "/etc/config/$name-NEW"
+        mv "${autorate_lib_path}/$config_file" "/etc/config/$name-NEW"
     fi
 else
     if [ "$is_git_proj" = true ]; then
         cp "./config/$config_file" "/etc/config/$name"
     else
-        cp "/tmp/sqm-autorate-sqm-autorate-*/config/$config_file" "/etc/config/$name"
+        mv "${autorate_lib_path}/$config_file" "/etc/config/$name"
     fi
 fi
 
@@ -173,9 +219,10 @@ echo ">>> Putting service file into place..."
 if [ "$is_git_proj" = true ]; then
     cp "./service/$service_file" "/etc/init.d/$name"
 else
-    cp "/tmp/sqm-autorate-sqm-autorate-*/service/$service_file" "/etc/init.d/$name"
+    mv "${autorate_lib_path}/$service_file" "/etc/init.d/$name"
 fi
 chmod a+x "/etc/init.d/$name"
+
 
 # transition section 1 - to be removed for release v0.6 or later
 if grep -q -e 'receive' -e 'transmit' "/etc/config/$name"; then
@@ -228,22 +275,17 @@ if grep -q -e 'receive' -e 'transmit' "/etc/config/$name"; then
         fi
     fi
 
-    uci set sqm-autorate.@advanced_settings[0].upload_delay_ms=15
-    uci set sqm-autorate.@advanced_settings[0].download_delay_ms=15
+    uci set sqm-autorate.@advanced_settings[0].upload_delay_ms=2
+    uci set sqm-autorate.@advanced_settings[0].download_delay_ms=2
 
     uci commit
 fi
 
-echo ">>> Updating VERSION string to include: ${INSTALLATION}"
+echo ">>> updating VERSION string to include: ${INSTALLATION}"
 sed -i-orig "/n    /! s;^\([[:blank:]]*local[[:blank:]]*_VERSION[[:blank:]]*=[[:blank:]]*\".*\)\"[[:blank:]]*$;\1${INSTALLATION}\";" "${autorate_lib_path}/${lua_file}"
 
-# Clean up temporary files
-if [ "$is_git_proj" = false ]; then
-    echo ">>> Cleaning up temporary files..."
-    rm -r /tmp/sqm-autorate-install.tar.gz /tmp/sqm-autorate-sqm-autorate-*
-fi
-
-echo ">>> Installation complete, about to start configuration."
+echo "
+>>> Installation complete, about to start configuration."
 
 if [ ! -x $autorate_lib_path/$configure_file ]; then
     echo "${autorate_lib_path}/${configure_file} is not found or not executable"
