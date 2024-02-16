@@ -27,11 +27,11 @@
 TS=`date -u -Iminutes`      # to avoid identifying location by timezone
 
 if [ -z "$1" ]; then        # no parameters, use default repo and branch
-    repo_root="https://raw.githubusercontent.com/sqm-autorate/sqm-autorate/testing/lua-threads"
+    repo_root="https://raw.githubusercontent.com/GLareFLare22/sqm-autorate/develop/main/"
     INSTALLATION="  [release]"
 
 elif [ -z "$2" ]; then      # one parameter, use specified branch in default repo
-    repo_root="https://raw.githubusercontent.com/sqm-autorate/sqm-autorate/${1}"
+    repo_root="https://raw.githubusercontent.com/GLareFLare22/sqm-autorate/${1}"
     INSTALLATION="\\\\n        branch ${1}\\\\n        ${TS}"
 
 else                        # two parameters, use specified repo and specified branch
@@ -182,7 +182,6 @@ if [ "$is_git_proj" = true ]; then
     cp "./lib/$refl_icmp_file" "$autorate_lib_path/$refl_icmp_file"
     cp "./lib/$refl_udp_file" "$autorate_lib_path/$refl_udp_file"
     cp "./lib/$configure_file" "$autorate_lib_path/$configure_file"
-    
     cp "./lib/$refl_icmp_ping" "$autorate_lib_path/$refl_icmp_ping"
     cp "./lib/$bit_file" "$autorate_lib_path/$bit_file"
     cp "./lib/$base_file" "$autorate_lib_path/$base_file"
